@@ -26,9 +26,13 @@ Out of respect for the original work: part of the controls in this library are i
 
 ![Component gallery](assets/2.png)
 
-| Light | Dark |
-|---|---|
-| ![Dashboard light](assets/3.png) | ![Dashboard dark](assets/4.png) |
+*Dashboard (light)*
+
+![Dashboard light](assets/3.png)
+
+*Dashboard (dark)*
+
+![Dashboard dark](assets/4.png)
 
 ## Requirements
 
