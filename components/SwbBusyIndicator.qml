@@ -12,6 +12,7 @@ BusyIndicator {
 
     // Arc color can be overridden to match its container, such as a button foreground.
     property color color: control.theme.mutedForeground
+    property bool animationPaused: false
 
     implicitWidth: diameter
     implicitHeight: diameter
@@ -22,7 +23,7 @@ BusyIndicator {
         implicitWidth: control.diameter
         implicitHeight: control.diameter
         opacity: control.running ? 1.0 : 0.0
-        Behavior on opacity { NumberAnimation { duration: control.theme.animationDuration } }
+        Behavior on opacity { OpacityAnimator { duration: control.theme.animationDuration } }
 
         Canvas {
             id: arc
@@ -46,11 +47,9 @@ BusyIndicator {
                 ctx.stroke()
             }
 
-            // RotationAnimator runs on the scene-graph thread and can advance too quickly when
-            // VSync throttling fails in some Windows graphics environments. A QML animation
-            // falls back to the timer cadence instead.
-            NumberAnimation on rotation {
-                running: control.running && control.visible
+            // Rotate on the scene-graph thread and stop updating while scrolling.
+            RotationAnimator on rotation {
+                running: control.running && control.visible && !control.animationPaused
                 from: 0
                 to: 360
                 duration: 900

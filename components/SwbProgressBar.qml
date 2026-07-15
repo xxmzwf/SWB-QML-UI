@@ -1,10 +1,12 @@
 import QtQuick
 import QtQuick.Controls.Basic
+import QtQuick.Effects
 
 ProgressBar {
     id: control
 
     property SwbStyle theme: SwbStyle {}
+    property bool animationPaused: false
 
     implicitWidth: 200
     opacity: enabled ? 1.0 : 0.5
@@ -19,6 +21,8 @@ ProgressBar {
 
     // Primary completed segment whose width follows value smoothly.
     contentItem: Item {
+        id: progressContent
+
         Rectangle {
             visible: !control.indeterminate
             width: control.visualPosition * parent.width
@@ -28,22 +32,56 @@ ProgressBar {
             Behavior on width { NumberAnimation { duration: control.theme.animationDuration; easing.type: Easing.OutCubic } }
         }
 
-        // Indeterminate progress sweeps a short segment along the track.
+        // The effect renders this hidden source through the rounded track mask.
         Rectangle {
-            id: sweep
-            visible: control.indeterminate
-            width: parent.width * 0.4
-            height: parent.height
-            radius: height / 2
-            color: control.theme.primary
+            id: indeterminateSource
 
-            NumberAnimation on x {
-                running: control.indeterminate && control.visible
-                from: -sweep.width
-                to: control.width
-                duration: 1200
-                loops: Animation.Infinite
+            anchors.fill: parent
+            radius: height / 2
+            color: "transparent"
+            clip: true
+            visible: false
+
+            Rectangle {
+                id: sweep
+
+                property real animationProgress: 0
+                readonly property real preferredWidth: parent.width * 0.4
+                readonly property real unclippedX: -preferredWidth + animationProgress * (parent.width + preferredWidth)
+
+                x: Math.max(0, unclippedX)
+                width: Math.max(0, Math.min(parent.width, unclippedX + preferredWidth) - x)
+                height: parent.height
+                radius: height / 2
+                color: control.theme.primary
+
+                NumberAnimation on animationProgress {
+                    running: control.indeterminate && control.visible && !control.animationPaused
+                    from: 0
+                    to: 1
+                    duration: 1200
+                    easing.type: Easing.Linear
+                    loops: Animation.Infinite
+                }
             }
+        }
+
+        Rectangle {
+            id: progressMask
+
+            anchors.fill: parent
+            radius: height / 2
+            color: "white"
+            visible: false
+            layer.enabled: true
+        }
+
+        MultiEffect {
+            anchors.fill: parent
+            visible: control.indeterminate
+            source: indeterminateSource
+            maskEnabled: true
+            maskSource: progressMask
         }
     }
 }

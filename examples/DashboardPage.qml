@@ -9,6 +9,8 @@ import SwbControls
 Item {
     id: dashboard
 
+    property bool active: true
+
     component DashboardCard: SwbFrame {
         id: card
 
@@ -380,9 +382,29 @@ Item {
             width: scroll.availableWidth
             spacing: 16
 
-            RowLayout {
+            GalleryFeaturedCarousel {
+                id: featuredCarousel
+
+                readonly property Flickable viewport: scroll.contentItem as Flickable
+                readonly property bool mostlyInViewport: {
+                    if (!viewport || height <= 0)
+                        return false
+
+                    viewport.contentY
+                    const top = featuredCarousel.mapToItem(scroll, 0, 0).y
+                    const visibleHeight = Math.max(0, Math.min(scroll.height, top + height) - Math.max(0, top))
+                    return visibleHeight >= height / 2
+                }
+
+                active: dashboard.active && visible && mostlyInViewport
                 Layout.fillWidth: true
                 Layout.topMargin: 24
+                Layout.leftMargin: 24
+                Layout.rightMargin: 24
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
                 Layout.leftMargin: 24
                 Layout.rightMargin: 24
                 spacing: 16

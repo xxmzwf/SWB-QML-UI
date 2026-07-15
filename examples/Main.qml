@@ -201,7 +201,7 @@ ApplicationWindow {
                 videoSource: window.homeVideoSource
             }
             GalleryPage { active: window.currentPage === 1 }
-            DashboardPage {}
+            DashboardPage { active: window.currentPage === 2 }
         }
     }
 

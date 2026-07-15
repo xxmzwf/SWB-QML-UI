@@ -8,7 +8,16 @@ qt_add_qml_module(SwbExample
     VERSION 1.0
     QML_FILES
         DashboardPage.qml
+        GalleryCategoryPage.qml
+        GalleryCommonPage.qml
+        GalleryDataPage.qml
+        GalleryFeaturedCarousel.qml
+        GalleryInputPage.qml
+        GalleryLayoutPage.qml
+        GalleryOverlaysPage.qml
         GalleryPage.qml
+        GallerySection.qml
+        GalleryStatusPage.qml
         HomePage.qml
         Main.qml
         RoundImage.qml

@@ -33,7 +33,8 @@ TabButton {
         mirrored: control.mirrored
         display: control.display
         icon: control.icon
-        text: control.text
+        // IconLabel treats a single ampersand as a mnemonic marker; escape it for literal labels.
+        text: control.text.replace(/&/g, "&&")
         font: control.font
         color: control.textColor
 
