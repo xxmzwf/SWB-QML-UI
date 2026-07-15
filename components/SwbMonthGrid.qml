@@ -8,6 +8,8 @@ MonthGrid {
     property SwbStyle theme: SwbStyle {}
 
     spacing: control.theme.calendarSpacing
+    implicitWidth: 7 * control.theme.calendarCellSize + 6 * spacing
+    implicitHeight: 6 * control.theme.calendarCellSize + 5 * spacing
 
     // Currently selected date; an invalid date leaves every cell unhighlighted.
     property date selectedDate
@@ -17,8 +19,8 @@ MonthGrid {
         id: cell
         required property var model
 
-        implicitWidth: control.theme.calendarCellSize
-        implicitHeight: control.theme.calendarCellSize
+        width: control.theme.calendarCellSize
+        height: control.theme.calendarCellSize
 
         readonly property bool currentMonth: model.month === control.month
         readonly property bool today: model.today

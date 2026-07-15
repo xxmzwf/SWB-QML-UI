@@ -9,6 +9,8 @@ WeekNumberColumn {
 
     spacing: control.theme.calendarSpacing
     padding: 0
+    implicitWidth: control.theme.calendarCellSize
+    implicitHeight: 6 * control.theme.calendarCellSize + 5 * spacing
 
     // Muted week numbers aligned with the month-grid row height.
     delegate: Text {

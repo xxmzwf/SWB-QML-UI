@@ -197,8 +197,8 @@ SwbButton { text: "Export"; theme: brandStyle }
 | 控件 | 基类 | 说明与主要 API |
 |---|---|---|
 | `SwbLabel` | `Label` | 使用主题字号、字重和禁用状态的文本标签 |
-| `SwbProgressBar` | `ProgressBar` | 进度条；支持 `indeterminate` 不确定进度模式 |
-| `SwbBusyIndicator` | `BusyIndicator` | 由 Canvas 绘制的旋转圆弧；`size: sm \| default \| lg`，也可自定义 `diameter` 和 `color` |
+| `SwbProgressBar` | `ProgressBar` | 进度条；支持 `indeterminate` 不确定进度模式；滚出视口时可用 `animationPaused` 暂停循环动画 |
+| `SwbBusyIndicator` | `BusyIndicator` | 由 Canvas 绘制的旋转圆弧；支持 `size: sm \| default \| lg` 及自定义 `diameter`、`color`；滚出视口时可用 `animationPaused` 暂停旋转 |
 | `SwbPageIndicator` | `PageIndicator` | 页面圆点指示器，突出显示当前页；默认允许交互 |
 
 ### 菜单
@@ -314,7 +314,7 @@ SwbMenu {
 
 ### 组合日历
 
-`SwbDayOfWeekRow`、`SwbWeekNumberColumn` 和 `SwbMonthGrid` 共享主题的 `calendarCellSize`，因此天然对齐——存在周数列时，只需让星期标题行偏移一个单元格：
+`SwbDayOfWeekRow`、`SwbWeekNumberColumn` 和 `SwbMonthGrid` 使用确定的共享单元格尺寸。存在周数列时，应根据实际控件宽度设置星期行的占位和宽度，这样使用局部主题覆写时也能保持对齐：
 
 ```qml
 Column {
@@ -322,12 +322,12 @@ Column {
 
     Row {
         spacing: SwbTheme.calendarSpacing
-        Item { width: SwbTheme.calendarCellSize; height: 1 }  // 占位对齐周数列
-        SwbDayOfWeekRow {}
+        Item { width: weekNumbers.width; height: 1 }
+        SwbDayOfWeekRow { width: grid.width }
     }
     Row {
         spacing: SwbTheme.calendarSpacing
-        SwbWeekNumberColumn { month: grid.month; year: grid.year }
+        SwbWeekNumberColumn { id: weekNumbers; month: grid.month; year: grid.year }
         SwbMonthGrid { id: grid; month: 5; year: 2026 }  // 点击某天 → selectedDate
     }
 }

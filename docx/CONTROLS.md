@@ -197,8 +197,8 @@ Beyond `theme`, most controls also expose their **resolved** style values as wri
 | Component | Restyles | Description & key API |
 |---|---|---|
 | `SwbLabel` | `Label` | Text label with the theme's size, weight, and disabled state |
-| `SwbProgressBar` | `ProgressBar` | Progress bar; supports `indeterminate` |
-| `SwbBusyIndicator` | `BusyIndicator` | Canvas-drawn spinning arc; `size: sm \| default \| lg`, or set a custom `diameter` and `color` |
+| `SwbProgressBar` | `ProgressBar` | Progress bar; supports `indeterminate`; set `animationPaused` to suspend its loop while offscreen |
+| `SwbBusyIndicator` | `BusyIndicator` | Canvas-drawn spinning arc; `size: sm \| default \| lg`, custom `diameter` and `color`; set `animationPaused` to suspend rotation while offscreen |
 | `SwbPageIndicator` | `PageIndicator` | Page dots, current page emphasized; `interactive` by default |
 
 ### Menus
@@ -314,7 +314,7 @@ SwbMenu {
 
 ### Composed calendar
 
-`SwbDayOfWeekRow`, `SwbWeekNumberColumn`, and `SwbMonthGrid` share the theme's `calendarCellSize`, so they align by construction — just offset the weekday header by one cell when a week-number column is present:
+`SwbDayOfWeekRow`, `SwbWeekNumberColumn`, and `SwbMonthGrid` share deterministic cell geometry. When a week-number column is present, size the header spacer and weekday row from the actual controls so per-instance theme overrides stay aligned:
 
 ```qml
 Column {
@@ -322,12 +322,12 @@ Column {
 
     Row {
         spacing: SwbTheme.calendarSpacing
-        Item { width: SwbTheme.calendarCellSize; height: 1 }  // spacer over the week numbers
-        SwbDayOfWeekRow {}
+        Item { width: weekNumbers.width; height: 1 }
+        SwbDayOfWeekRow { width: grid.width }
     }
     Row {
         spacing: SwbTheme.calendarSpacing
-        SwbWeekNumberColumn { month: grid.month; year: grid.year }
+        SwbWeekNumberColumn { id: weekNumbers; month: grid.month; year: grid.year }
         SwbMonthGrid { id: grid; month: 5; year: 2026 }  // click a day → selectedDate
     }
 }
