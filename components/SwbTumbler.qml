@@ -14,6 +14,7 @@ Tumbler {
     readonly property real rowHeight: availableHeight / visibleItemCount
     property int scrollAnimationDuration: 100
     property int wheelAngleDeltaRemainder: 0
+    property real lastWheelTimeMs: 0
 
     // Use a shorter movement duration than the internal view's slow 1000ms default.
     Component.onCompleted: applyMoveDuration()
@@ -25,13 +26,14 @@ Tumbler {
     }
 
     // Find the unexposed internal PathView/ListView under contentItem and override its move duration.
-    function applyMoveDuration() {
+    function applyMoveDuration(duration) {
         if (!contentItem)
             return
+        const d = duration === undefined ? scrollAnimationDuration : duration
         const views = contentItem.children
         for (let i = 0; i < views.length; ++i) {
             if (views[i]["highlightMoveDuration"] !== undefined) {
-                views[i]["highlightMoveDuration"] = control.scrollAnimationDuration
+                views[i]["highlightMoveDuration"] = d
                 return
             }
         }
@@ -52,6 +54,15 @@ Tumbler {
             return
 
         wheelAngleDeltaRemainder -= steps * 120
+
+        // Snap instead of animating once the wheel outruns the move. A spaced notch animates
+        // smoothly, but during a fast flick currentIndex advances faster than highlightMoveDuration
+        // can follow; on a short wrapping tumbler the highlight then lags past half the ring and the
+        // shortest-path move stalls or reverses. Snapping keeps the view locked to currentIndex.
+        const nowMs = Date.now()
+        applyMoveDuration(nowMs - lastWheelTimeMs < scrollAnimationDuration ? 0 : scrollAnimationDuration)
+        lastWheelTimeMs = nowMs
+
         let nextIndex = currentIndex - steps
         if (wrap) {
             nextIndex = ((nextIndex % count) + count) % count
@@ -66,6 +77,10 @@ Tumbler {
     delegate: Text {
         id: item
         text: modelData
+        // Fill the whole row so the wheel/click area below covers it edge to edge; a text-sized
+        // delegate leaves gaps beside the text where the wheel escapes to an enclosing Flickable.
+        width: control.availableWidth
+        height: control.rowHeight
         font.pixelSize: control.theme.fontSize
         font.weight: Math.abs(Tumbler.displacement) < 0.5 ? Font.DemiBold : Font.Normal
         color: control.theme.foreground

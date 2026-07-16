@@ -47,8 +47,11 @@ BusyIndicator {
                 ctx.stroke()
             }
 
-            // Rotate on the scene-graph thread and stop updating while scrolling.
-            RotationAnimator on rotation {
+            // Drive rotation on the GUI thread with a wall-clock timer so the speed is
+            // identical on every machine. A RotationAnimator advances on the render thread
+            // once per vsync, so its speed drifts whenever the real frame rate differs from
+            // the display's reported refresh rate (high-refresh or mismatched monitors).
+            NumberAnimation on rotation {
                 running: control.running && control.visible && !control.animationPaused
                 from: 0
                 to: 360
