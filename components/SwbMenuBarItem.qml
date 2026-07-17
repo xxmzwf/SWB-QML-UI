@@ -11,6 +11,8 @@ MenuBarItem {
                                       ? control.theme.secondary
                                       : control.theme.withAlpha(control.theme.secondary, 0)
 
+    property int alignment: Qt.AlignCenter  // Qt.Alignment flags placing the icon and text in the item.
+
     horizontalPadding: 6
     verticalPadding: 0
     spacing: 6
@@ -25,7 +27,7 @@ MenuBarItem {
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display
-        alignment: Qt.AlignCenter
+        alignment: control.alignment
         icon: control.icon
         text: control.text
         font: control.font

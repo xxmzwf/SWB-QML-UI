@@ -10,6 +10,7 @@ RoundButton {
     // Control properties.
     property string variant: "default"  // default | destructive | outline | secondary | ghost | link
     property string size: "default"     // sm | default | lg
+    property int alignment: Qt.AlignCenter  // Qt.Alignment flags placing the icon and text in the button.
 
     // Resolve the fill from the variant; destructive uses subtle red and hover darkens the default.
     property color bgColor: {
@@ -55,6 +56,7 @@ RoundButton {
     implicitWidth: Math.max(controlHeight, implicitContentWidth + leftPadding + rightPadding)
 
     contentItem: IconLabel {
+        alignment: control.alignment
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display

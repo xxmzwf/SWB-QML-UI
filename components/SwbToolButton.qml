@@ -10,6 +10,7 @@ ToolButton {
     // Control properties.
     property string variant: "default"  // default | outline
     property string size: "default"     // sm | default | lg
+    property int alignment: Qt.AlignCenter  // Qt.Alignment flags placing the icon and text in the button.
 
     // Resolve the fill from the variant and checked state; checked and hovered buttons use accent.
     property color bgColor: {
@@ -43,6 +44,7 @@ ToolButton {
     implicitWidth: Math.max(controlHeight, implicitContentWidth + leftPadding + rightPadding)
 
     contentItem: IconLabel {
+        alignment: control.alignment
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display

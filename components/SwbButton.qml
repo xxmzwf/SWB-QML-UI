@@ -10,6 +10,7 @@ Button {
     // Control properties.
     property string variant: "default"  // default | destructive | outline | secondary | ghost | link
     property string size: "default"     // sm | default | lg
+    property int alignment: Qt.AlignCenter  // Qt.Alignment flags placing the icon and text in the button.
 
     // Resolve the fill from the variant; destructive uses a subtle red and hover increases contrast.
     property color bgColor: {
@@ -52,6 +53,7 @@ Button {
     opacity: enabled ? 1.0 : 0.5
 
     contentItem: IconLabel {
+        alignment: control.alignment
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display

@@ -18,6 +18,8 @@ TabButton {
     property color textColor: checked || hovered
                                                ? control.theme.foreground : control.theme.mutedForeground
 
+    property int alignment: Qt.AlignCenter  // Qt.Alignment flags placing the icon and text in the tab.
+
     horizontalPadding: 6
     verticalPadding: 0
     spacing: 6
@@ -29,6 +31,7 @@ TabButton {
     opacity: enabled ? 1.0 : 0.5
 
     contentItem: IconLabel {
+        alignment: control.alignment
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display
