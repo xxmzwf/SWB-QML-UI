@@ -95,7 +95,7 @@ Window {
 
 ### Option 1 — Source import (`add_subdirectory`) — recommended
 
-Copy the repository (or add it as a git submodule) into your project, then:
+Copy the **whole repository** — its root `CMakeLists.txt` included, not just `components/` — into your project (or add it as a git submodule), then:
 
 ```cmake
 add_subdirectory(SWB-QML-UI)

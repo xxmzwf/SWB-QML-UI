@@ -95,7 +95,7 @@ Window {
 
 ### 方式一.源码导入（`add_subdirectory`）——推荐
 
-将本仓库拷贝（或以 git submodule 形式放置）到你的工程中，然后：
+将本仓库**整个目录**（包含根 `CMakeLists.txt`，而不是只拷 `components/`）拷贝或以 git submodule 形式放置到你的工程中，然后：
 
 ```cmake
 add_subdirectory(SWB-QML-UI)
