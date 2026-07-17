@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls.impl
 import QtQuick.Controls.Basic
 
 Button {
@@ -39,21 +40,25 @@ Button {
     property int radius: size === "sm" ? control.theme.radiusSm : control.theme.radius
     horizontalPadding: 10
     verticalPadding: 0
+    // Icons follow the size token and tint with the variant text color.
+    icon.width: control.theme.iconSize
+    icon.height: control.theme.iconSize
+    icon.color: control.textColor
 
     hoverEnabled: true
     font.pixelSize: size === "sm" ? control.theme.fontSizeSm : control.theme.fontSize
     font.weight: control.theme.fontWeight
+    font.underline: control.variant === "link" && control.hovered
     opacity: enabled ? 1.0 : 0.5
 
-    contentItem: Text {
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+        icon: control.icon
         text: control.text
-        font.pixelSize: control.font.pixelSize
-        font.weight: control.font.weight
-        font.underline: control.variant === "link" && control.hovered
+        font: control.font
         color: control.textColor
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
         Behavior on color { ColorAnimation { duration: control.theme.animationDuration } }
     }
 

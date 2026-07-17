@@ -168,6 +168,18 @@ Beyond `theme`, most controls also expose their **resolved** style values as wri
 | `SwbRoundButton` | `RoundButton` | Same variants/sizes as `SwbButton`; circle for short content, pill for longer text |
 | `SwbDelayButton` | `DelayButton` | Press-and-hold confirmation; `variant: default \| destructive`; `size`; fills up while held, then emits `activated()` |
 
+**Icons.** These buttons inherit the standard `AbstractButton` icon API: set `icon.source` (or `icon.name`), size it with `icon.width` / `icon.height` (default: the `iconSize` token, 16), position it with `display` (`IconOnly` / `TextOnly` / `TextBesideIcon` / `TextUnderIcon`), and tune the icon–text gap with `spacing`. To place the icon to the right of the text, enable `LayoutMirroring.enabled: true` on the button.
+
+> **Note — icons are tinted by default.** Icons are treated as monochrome glyphs and tinted with the variant's text color (via `icon.color`), so they follow the theme and variant automatically — ideal for single-color line icons. A colorful image will collapse into a single-color silhouette. To keep an icon's original colors, opt out of tinting:
+>
+> ```qml
+> SwbButton {
+>     text: "Open"
+>     icon.source: "qrc:/icons/picture.svg"
+>     icon.color: "transparent"   // keep the icon's own colors
+> }
+> ```
+
 ### Selection & value input
 
 | Component | Restyles | Description & key API |

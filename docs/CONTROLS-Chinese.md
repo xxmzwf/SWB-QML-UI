@@ -168,6 +168,18 @@ SwbButton { text: "Export"; theme: brandStyle }
 | `SwbRoundButton` | `RoundButton` | 与 `SwbButton` 使用相同的 variant 和 size；短内容显示为圆形，较长文字显示为胶囊形 |
 | `SwbDelayButton` | `DelayButton` | 长按确认按钮；`variant: default \| destructive`；支持 `size`；按住时逐渐填充，完成后发出 `activated()` 信号 |
 
+**图标。** 以上按钮均继承标准的 `AbstractButton` 图标 API：用 `icon.source`（或 `icon.name`）设置图标，`icon.width` / `icon.height` 调整尺寸（默认取 `iconSize` 令牌，16），`display` 控制图标与文字的位置关系（`IconOnly` / `TextOnly` / `TextBesideIcon` / `TextUnderIcon`），`spacing` 调整图标与文字的间距。想让图标显示在文字右侧，可在按钮上开启 `LayoutMirroring.enabled: true`。
+
+> **注意——图标默认会被染色。** 图标被视为单色剪影，自动染成当前 variant 的文字颜色（通过 `icon.color`），从而跟随主题与变体联动——最适合单色线条图标。彩色图片会因此变成单色色块。若要保留图标原本的颜色，请关闭染色：
+>
+> ```qml
+> SwbButton {
+>     text: "打开"
+>     icon.source: "qrc:/icons/picture.svg"
+>     icon.color: "transparent"   // 保留图标自身的颜色
+> }
+> ```
+
 ### 选择与数值输入
 
 | 控件 | 基类 | 说明与主要 API |
