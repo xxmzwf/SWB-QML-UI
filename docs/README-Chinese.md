@@ -91,7 +91,9 @@ Window {
 
 > 下方 CMake 片段中的可执行目标名为 `appMyApp`。若你想换名字，请保证它**与你的 QML 模块 URI 不同名**（或将目标设为 macOS bundle），否则 QML 输出目录会和可执行文件抢占同一路径。
 
-### 方式一.源码导入（`add_subdirectory`）
+**推荐使用方式一** ——一句 `add_subdirectory` 就能用：无需安装步骤、无需管理任何路径，IDE 工具链还能直接从构建目录识别模块，最为方便。仅当多个项目需要共享同一份预编译库时，才考虑方式二/三。
+
+### 方式一.源码导入（`add_subdirectory`）——推荐
 
 将本仓库拷贝（或以 git submodule 形式放置）到你的工程中，然后：
 
@@ -118,9 +120,9 @@ cmake --install build --prefix /your/prefix
 安装产物布局：
 
 ```
-lib/libSwbControls.<so|dylib|dll>     # 主库
+lib/libSwbControls.<so|dylib|dll>     # 主库（编译后的 QML 已在库内）
 lib/cmake/SwbControls/                # 供 find_package 使用的 CMake 包配置
-share/qml/SwbControls/                # QML 模块：插件 + qmldir + qmltypes
+share/qml/SwbControls/                # 磁盘 QML 模块：qmldir + qmltypes + QML 源文件 + 插件
 ```
 
 在你的工程中使用：
@@ -128,19 +130,10 @@ share/qml/SwbControls/                # QML 模块：插件 + qmldir + qmltypes
 ```cmake
 list(APPEND CMAKE_PREFIX_PATH "/your/prefix")
 find_package(SwbControls REQUIRED)
-
 target_link_libraries(appMyApp PRIVATE Qt6::Quick Swb::SwbControls)
-# 包配置导出了 QML 模块的安装目录，把它传给你的应用：
-target_compile_definitions(appMyApp PRIVATE
-    SWB_QML_DIR="${SwbControls_QML_IMPORT_PATH}")
 ```
 
-```cpp
-QQmlApplicationEngine engine;
-engine.addImportPath(QStringLiteral(SWB_QML_DIR));  // 在加载 QML 之前调用
-```
-
-**为什么需要 import path？** 动态库模式下，QML 引擎在运行时从磁盘加载插件，因此必须能找到 `share/qml/SwbControls/` 目录。把 `QML_IMPORT_PATH` 环境变量设为该目录同样可行。发布应用时，需要把 `libSwbControls` 和 `share/qml/SwbControls/` 目录随应用一起分发。
+无需 import path，也无需任何额外代码：编译后的 QML 资源随 `libSwbControls` 一起加载并自动注册，引擎通过内置的 `qrc:/qt/qml` 路径即可解析 `import SwbControls`。发布应用时，把 `libSwbControls` 随应用一起分发即可。磁盘上的 `share/qml/SwbControls/` 目录是给工具链用的——qmllint/qmlls 和 IDE 从这里读取 `.qml` 源文件（见下方 **IDE 与 qmlls 支持**）。
 
 ### 方式三.静态库导入（`find_package`）
 
@@ -160,17 +153,21 @@ find_package(SwbControls REQUIRED)
 target_link_libraries(appMyApp PRIVATE Qt6::Quick Swb::SwbControls)
 ```
 
-这就是静态与动态的区别所在：**不需要 import path，也不需要任何额外代码。** QML 插件、类型注册以及编译后的 QML 资源会直接链接进你的可执行文件（CMake 包配置已自动把它们挂到 `Swb::SwbControls` 上），引擎通过内置的 `qrc:/qt/qml` 路径即可找到模块，最终一切都打进单个二进制文件。
+消费端代码与方式二完全一致。区别在于交付形态：QML 插件、类型注册以及编译后的 QML 资源都直接链接进你的可执行文件（CMake 包配置已自动把它们挂到 `Swb::SwbControls` 上），最终得到一个自包含的单个二进制，发布时无需附带任何库文件。
 
-若想用同一份 CMakeLists.txt 兼容动态、静态两种安装，可按库类型有条件地定义 import path：
+## IDE 与 QML 语言服务器（qmlls）支持
+
+安装后的模块在 `qmldir` 旁附带了全部 `.qml` 源文件，因此 `qmllint`、`qmlls` 以及基于它们的编辑器都能完整解析 Swb 控件的类型、继承链与代码补全。
+
+消费项目（方式二/三）只需让 CMake 自动生成指向本库的 `.qmlls.ini`：
 
 ```cmake
-get_target_property(_swb_type Swb::SwbControls TYPE)
-if(_swb_type STREQUAL "SHARED_LIBRARY")
-    target_compile_definitions(appMyApp PRIVATE
-        SWB_QML_DIR="${SwbControls_QML_IMPORT_PATH}")
-endif()
+set(QT_QML_GENERATE_QMLLS_INI ON CACHE BOOL "" FORCE)
+set_target_properties(appMyApp PROPERTIES
+    QT_QML_IMPORT_PATH "${SwbControls_QML_IMPORT_PATH}")
 ```
+
+`.qmlls.ini` 会在构建时（重新）生成到项目根目录，建议将它加入 `.gitignore`。方式一下模块本就位于你的构建目录中，生成的 `buildDir` 条目已能覆盖，只保留第一行即可。
 
 ## 控件
 

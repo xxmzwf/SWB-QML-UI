@@ -7,11 +7,8 @@ set_source_files_properties(SwbTheme.qml PROPERTIES
     QT_QML_SINGLETON_TYPE TRUE
 )
 
-qt_add_qml_module(SwbControls
-    URI SwbControls
-    VERSION 1.0
-    OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/SwbControls
-    QML_FILES
+# Single source of truth for the module's QML files; also installed for tooling.
+set(swb_qml_files
         SwbBusyIndicator.qml
         SwbButton.qml
         SwbCheckBox.qml
@@ -69,6 +66,13 @@ qt_add_qml_module(SwbControls
         SwbTheme.qml
 )
 
+qt_add_qml_module(SwbControls
+    URI SwbControls
+    VERSION 1.0
+    OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/SwbControls
+    QML_FILES ${swb_qml_files}
+)
+
 target_link_libraries(SwbControls PRIVATE Qt6::Quick)
 
 # ---- Installation rules for cmake --install and find_package(SwbControls) ----
@@ -113,6 +117,10 @@ install(FILES
     "${CMAKE_BINARY_DIR}/SwbControls/SwbControls.qmltypes"
     DESTINATION ${_swb_module_dir}
 )
+
+# QML sources next to the qmldir so qmlls/qmllint can resolve the declared types;
+# the engine still loads the compiled resources (qmldir "prefer" directive).
+install(FILES ${swb_qml_files} DESTINATION ${_swb_module_dir})
 
 # Generate and install package configuration files for find_package(SwbControls).
 # PROJECT_SOURCE_DIR keeps the path correct when this library is embedded with add_subdirectory.

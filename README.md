@@ -1,6 +1,6 @@
 # SWB-QML-UI（Shadcn Base UI for QML）
 
-English | [简体中文](docx/README-Chinese.md)
+English | [简体中文](docs/README-Chinese.md)
 
 <p align="center">
   <img alt="macOS" src="https://img.shields.io/badge/platform-macOS-000000?style=flat&logo=apple&logoColor=white">
@@ -11,7 +11,7 @@ English | [简体中文](docx/README-Chinese.md)
 
 Out of respect for the original work: part of the controls in this library are implemented following the design parameters of [shadcn](https://ui.shadcn.com/)'s Base UI components, and the rest are written from scratch for this library.
 
-- **51 restyled controls** — buttons, inputs, menus, popups, navigation, calendar, table helpers… see the [component reference](docx/CONTROLS.md)
+- **51 restyled controls** — buttons, inputs, menus, popups, navigation, calendar, table helpers… see the [component reference](docs/CONTROLS.md)
 - **One-line theming** — every control follows the `SwbTheme` singleton; toggle `SwbTheme.darkMode` and the whole UI switches
 - **Zero image assets** — all icons are drawn at runtime with `Canvas`, so they stay crisp at any scale and recolor with the theme
 - **Plain Qt** — pure QML on top of `QtQuick.Controls.Basic`, no private APIs
@@ -87,11 +87,13 @@ Window {
 }
 ```
 
-`SwbTheme` is a **module singleton** — it is registered automatically with the module, so after `import SwbControls` you can customize its light/dark palettes and metrics or switch modes (`SwbTheme.darkMode = true`) anywhere; dark mode follows the system color scheme by default. Every visual control also exposes a local `theme: SwbStyle` object for per-instance overrides. See the [component reference](docx/CONTROLS.md) for the full API.
+`SwbTheme` is a **module singleton** — it is registered automatically with the module, so after `import SwbControls` you can customize its light/dark palettes and metrics or switch modes (`SwbTheme.darkMode = true`) anywhere; dark mode follows the system color scheme by default. Every visual control also exposes a local `theme: SwbStyle` object for per-instance overrides. See the [component reference](docs/CONTROLS.md) for the full API.
 
 > The CMake snippets below name the executable target `appMyApp`. If you prefer another name, keep it **different from your QML module URI** (or make the target a macOS bundle) — otherwise the QML output directory and the executable fight over the same path.
 
-### Option 1 — Source import (`add_subdirectory`)
+**Option 1 is the recommended route** — a single `add_subdirectory`, no install step, no paths to manage, and IDE tooling picks the module up from your build directory automatically. Reach for Option 2/3 only when several projects should share one prebuilt copy of the library.
+
+### Option 1 — Source import (`add_subdirectory`) — recommended
 
 Copy the repository (or add it as a git submodule) into your project, then:
 
@@ -118,9 +120,9 @@ cmake --install build --prefix /your/prefix
 Installed layout:
 
 ```
-lib/libSwbControls.<so|dylib|dll>     # backing library
+lib/libSwbControls.<so|dylib|dll>     # backing library (compiled QML inside)
 lib/cmake/SwbControls/                # CMake package files for find_package
-share/qml/SwbControls/                # QML module: plugin + qmldir + qmltypes
+share/qml/SwbControls/                # on-disk QML module: qmldir + qmltypes + QML sources + plugin
 ```
 
 Consume it:
@@ -128,19 +130,10 @@ Consume it:
 ```cmake
 list(APPEND CMAKE_PREFIX_PATH "/your/prefix")
 find_package(SwbControls REQUIRED)
-
 target_link_libraries(appMyApp PRIVATE Qt6::Quick Swb::SwbControls)
-# The package exports the installed QML directory; hand it to your app:
-target_compile_definitions(appMyApp PRIVATE
-    SWB_QML_DIR="${SwbControls_QML_IMPORT_PATH}")
 ```
 
-```cpp
-QQmlApplicationEngine engine;
-engine.addImportPath(QStringLiteral(SWB_QML_DIR));  // before loading QML
-```
-
-**Why the import path?** With a shared build, the QML engine loads the plugin from disk at runtime, so it must be able to find `share/qml/SwbControls/`. Setting the `QML_IMPORT_PATH` environment variable to that directory works too. When you ship the app, distribute `libSwbControls` and the `share/qml/SwbControls/` directory alongside it.
+No import path and no extra code: the compiled QML resources travel inside `libSwbControls` and register themselves when the library loads, so the engine resolves `import SwbControls` through its built-in `qrc:/qt/qml` path. When you ship the app, distribute `libSwbControls` alongside it. The on-disk `share/qml/SwbControls/` directory serves the tooling — qmllint/qmlls and your IDE read the plain `.qml` sources from there (see [IDE & qmlls support](#ide--qml-language-server-qmlls-support)).
 
 ### Option 3 — Installed static library (`find_package`)
 
@@ -160,23 +153,27 @@ find_package(SwbControls REQUIRED)
 target_link_libraries(appMyApp PRIVATE Qt6::Quick Swb::SwbControls)
 ```
 
-This is where static differs from shared: **no import path and no extra code needed.** The QML plugin, its type registrations, and all compiled QML resources are linked straight into your executable (the CMake package attaches them to `Swb::SwbControls` automatically), and the engine finds the module through the built-in `qrc:/qt/qml` path. Everything ends up inside a single binary.
+The consuming code is identical to Option 2. The difference is the deliverable: the QML plugin, its type registrations, and all compiled QML resources are linked straight into your executable (the CMake package attaches them to `Swb::SwbControls` automatically), so everything ends up inside a single self-contained binary — nothing to ship next to it.
 
-If you support both build flavors with one CMakeLists.txt, gate the import-path define on the library type:
+## IDE & QML language server (qmlls) support
+
+The installed module ships its plain `.qml` sources next to the `qmldir`, so `qmllint` and `qmlls` — and any editor powered by them — can resolve every Swb type, its inheritance chain, and code completion.
+
+For a consuming project (Options 2/3), let CMake generate the `.qmlls.ini` that points qmlls at the library:
 
 ```cmake
-get_target_property(_swb_type Swb::SwbControls TYPE)
-if(_swb_type STREQUAL "SHARED_LIBRARY")
-    target_compile_definitions(appMyApp PRIVATE
-        SWB_QML_DIR="${SwbControls_QML_IMPORT_PATH}")
-endif()
+set(QT_QML_GENERATE_QMLLS_INI ON CACHE BOOL "" FORCE)
+set_target_properties(appMyApp PROPERTIES
+    QT_QML_IMPORT_PATH "${SwbControls_QML_IMPORT_PATH}")
 ```
+
+`.qmlls.ini` is (re)written into your project root at build time — add it to your `.gitignore`. With Option 1 the module already lives in your build directory, which the generated `buildDir` entry covers, so the first line alone is enough.
 
 ## Components
 
 All 51 visual controls of `QtQuick.Controls.Basic` are covered — buttons, value inputs, text editing (with a themed right-click menu), menus, popups & overlays, navigation, containers, calendar, and table helpers.
 
-**[→ Component reference & usage](docx/CONTROLS.md)**
+**[→ Component reference & usage](docs/CONTROLS.md)**
 
 ## License
 
