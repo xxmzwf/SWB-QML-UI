@@ -166,27 +166,43 @@ ComboBox {
     // nothing flashes back to its old slot before jumping to the new one.
     property bool _settling: false
 
-    // Keep the originally selected item selected after a removal: when the removed
-    // row sits before it, its index shifts down by one.
+    // Adjust currentIndex after a removal so the intended item stays selected.
+    // Runs only once the data actually shrank, so ignoring the signal leaves the
+    // selection untouched instead of desyncing it.
     function _applyRemove(index) {
-        if (index === currentIndex)   // the selected item cannot be removed
+        if (index < 0 || index >= count)
             return
         var ci = currentIndex
+        var before = count
         removeRequested(index)
-        if (index < ci) {
+        if (count >= before)          // nobody removed the row: leave the selection alone
+            return
+        var newIndex = ci
+        if (index === ci)             // removed the selected row: select the row after it
+            newIndex = index >= count ? count - 1 : index
+        else if (index < ci)          // a row before it went away: shift down by one
+            newIndex = ci - 1
+        // index > ci: unaffected
+        if (newIndex !== currentIndex) {
             var keyword = editText    // setCurrentIndex may reset editText; keep the search term
-            currentIndex = ci - 1
+            currentIndex = newIndex
             if (searching)
                 editText = keyword
         }
     }
 
-    // Keep the originally selected item selected after a move, adjusting only its
-    // index — the same shift as removing at `from` then inserting at `to`.
+    // Adjust currentIndex after a move so the same item stays selected — the shift
+    // equals removing at `from` then inserting at `to`. Runs only once the data
+    // actually moved (the moved text now sits at `to`), so ignoring the signal
+    // leaves the selection untouched instead of desyncing it.
     function _applyMove(from, to) {
         if (from < 0 || to < 0 || from === to)   // unchanged position: emit nothing
             return
+        var moved = textAt(from)
         var ci = currentIndex
+        moveRequested(from, to)
+        if (textAt(to) !== moved)     // nobody moved the data: leave the selection alone
+            return
         var newIndex = ci
         if (ci === from) {
             newIndex = to
@@ -194,7 +210,6 @@ ComboBox {
             if (from < ci) newIndex -= 1
             if (to <= newIndex) newIndex += 1
         }
-        moveRequested(from, to)
         if (newIndex !== currentIndex)
             currentIndex = newIndex
     }
@@ -323,40 +338,23 @@ ComboBox {
                     anchors.right: parent.right
                     anchors.rightMargin: 6
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 24
                     height: 24
+                    // When removable, reserve check slot + gap + delete button so every
+                    // row's × lines up regardless of selection; otherwise just the check
+                    // slot, matching the plain combo box.
+                    width: control.removable ? (control.theme.iconSize + 2 + 24) : 24
 
-                    // Check icon marking the selected item.
-                    Canvas {
-                        anchors.centerIn: parent
-                        width: control.theme.iconSize
-                        height: control.theme.iconSize
-                        visible: item.current
-                        property color strokeColor: control.theme.foreground
-                        onStrokeColorChanged: requestPaint()
-                        onVisibleChanged: if (visible) requestPaint()
-                        onPaint: {
-                            let ctx = getContext("2d")
-                            let s = width / 24
-                            ctx.reset()
-                            ctx.strokeStyle = strokeColor
-                            ctx.lineWidth = 2
-                            ctx.lineCap = "round"
-                            ctx.lineJoin = "round"
-                            ctx.beginPath()
-                            ctx.moveTo(20 * s, 6 * s)
-                            ctx.lineTo(9 * s, 17 * s)
-                            ctx.lineTo(4 * s, 12 * s)
-                            ctx.stroke()
-                        }
-                    }
-
-                    // Delete button on non-selected items when removable. A contained
+                    // Delete button: shown on every item when removable and pinned to the
+                    // right so all × marks align (the selected item included). A contained
                     // tap removes the item without selecting it, closing the popup, or
                     // changing the search text.
                     Item {
-                        anchors.fill: parent
-                        visible: control.removable && !item.current
+                        id: removeButton
+                        visible: control.removable
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 24
+                        height: 24
 
                         HoverHandler { id: removeHover }
 
@@ -397,6 +395,35 @@ ComboBox {
                         TapHandler {
                             gesturePolicy: TapHandler.ReleaseWithinBounds
                             onTapped: control._applyRemove(item.index)
+                        }
+                    }
+
+                    // Check icon on the selected item: left of the × when removable,
+                    // otherwise centered in the rightmost slot (plain combo box).
+                    Canvas {
+                        id: checkMark
+                        visible: item.current
+                        anchors.right: control.removable ? removeButton.left : parent.right
+                        anchors.rightMargin: control.removable ? 2 : (24 - control.theme.iconSize) / 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: control.theme.iconSize
+                        height: control.theme.iconSize
+                        property color strokeColor: control.theme.foreground
+                        onStrokeColorChanged: requestPaint()
+                        onVisibleChanged: if (visible) requestPaint()
+                        onPaint: {
+                            let ctx = getContext("2d")
+                            let s = width / 24
+                            ctx.reset()
+                            ctx.strokeStyle = strokeColor
+                            ctx.lineWidth = 2
+                            ctx.lineCap = "round"
+                            ctx.lineJoin = "round"
+                            ctx.beginPath()
+                            ctx.moveTo(20 * s, 6 * s)
+                            ctx.lineTo(9 * s, 17 * s)
+                            ctx.lineTo(4 * s, 12 * s)
+                            ctx.stroke()
                         }
                     }
                 }

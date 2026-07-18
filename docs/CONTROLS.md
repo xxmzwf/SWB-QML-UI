@@ -193,7 +193,7 @@ Beyond `theme`, most controls also expose their **resolved** style values as wri
 | `SwbSpinBox` | `SpinBox` | Integer stepper; editable text with side-by-side step buttons; `stepWidth` sizes them |
 | `SwbDoubleSpinBox` | `DoubleSpinBox` | Floating-point stepper; `decimals` precision; `stepWidth` sizes the step buttons |
 | `SwbTumbler` | `Tumbler` | Wheel picker; highlighted current item, edge fade; `scrollAnimationDuration` tunes the snap speed |
-| `SwbComboBox` | `ComboBox` | Editable, searchable dropdown; `placeholderText`; typing filters items, Enter picks the first match; optional `removable` (delete button on non-selected items, emits `removeRequested(index)`) and `reorderable` (press-and-drag to reorder, emits `moveRequested(from, to)`); both report source-model indices and adjust `currentIndex` to keep the selected item |
+| `SwbComboBox` | `ComboBox` | Editable, searchable dropdown; `placeholderText`; typing filters items, Enter picks the first match; optional `removable` (delete button, emits `removeRequested(index)`) and `reorderable` (press-and-drag to reorder, emits `moveRequested(from, to)`); both report source-model indices and adjust `currentIndex` to keep the selected item |
 
 ### Text input
 

@@ -193,7 +193,7 @@ SwbButton { text: "Export"; theme: brandStyle }
 | `SwbSpinBox` | `SpinBox` | 整数步进输入框；支持编辑文字，并在一侧排列增减按钮；`stepWidth` 设置按钮宽度 |
 | `SwbDoubleSpinBox` | `DoubleSpinBox` | 浮点数步进输入框；使用 `decimals` 设置精度；`stepWidth` 设置增减按钮宽度 |
 | `SwbTumbler` | `Tumbler` | 滚轮选择器；高亮当前项，并在边缘显示渐隐效果；`scrollAnimationDuration` 调节吸附动画速度 |
-| `SwbComboBox` | `ComboBox` | 可编辑、可搜索的下拉框；支持 `placeholderText`；输入时过滤选项，按 Enter 选择第一个匹配项；可选 `removable`（非选中项显示删除按钮，发出 `removeRequested(index)`）与 `reorderable`（按住拖拽排序，发出 `moveRequested(from, to)`）；两者均使用源模型索引，并自动调整 `currentIndex` 以保持选中项不变 |
+| `SwbComboBox` | `ComboBox` | 可编辑、可搜索的下拉框；支持 `placeholderText`；输入时过滤选项，按 Enter 选择第一个匹配项；可选 `removable`（显示删除按钮，发出 `removeRequested(index)`）与 `reorderable`（按住拖拽排序，发出 `moveRequested(from, to)`）；两者均使用源模型索引，并自动调整 `currentIndex` 以保持选中项不变 |
 
 ### 文本输入
 
