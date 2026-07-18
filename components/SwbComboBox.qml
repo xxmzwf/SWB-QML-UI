@@ -10,6 +10,18 @@ ComboBox {
 
     property string placeholderText: ""
 
+    // Optional: show a delete button on every non-selected item. Clicking it emits
+    // removeRequested with the source index; the control never mutates the data —
+    // the ViewModel deletes and notifies the model via begin/endRemoveRows.
+    property bool removable: false
+    signal removeRequested(int index)
+
+    // Optional: press and drag an item to reorder it. On release moveRequested is
+    // emitted with the source and final indices; the ViewModel moves the data via
+    // begin/endMoveRows. Disabled while filtering so the source index stays reliable.
+    property bool reorderable: false
+    signal moveRequested(int fromIndex, int toIndex)
+
     // Filter only after the user types; initially show every item when opening.
     property bool searching: false
     readonly property string query: searching ? editText.toLowerCase() : ""
@@ -142,62 +154,251 @@ ComboBox {
         }
     }
 
-    // Collapse list items that do not match the current query.
+    // Shared row height; the drag gap and drop-target math reuse this value.
+    readonly property int _itemHeight: 32
+
+    // Reorder state, both source indices: the dragged row and its current drop
+    // target. -1 means no drag is in progress.
+    property int _dragSourceIndex: -1
+    property int _dragTargetIndex: -1
+    // True only for the frame that settles a drop: row offsets snap to 0 without
+    // animation while forceLayout() applies the moved model in the same frame, so
+    // nothing flashes back to its old slot before jumping to the new one.
+    property bool _settling: false
+
+    // Keep the originally selected item selected after a removal: when the removed
+    // row sits before it, its index shifts down by one.
+    function _applyRemove(index) {
+        if (index === currentIndex)   // the selected item cannot be removed
+            return
+        var ci = currentIndex
+        removeRequested(index)
+        if (index < ci) {
+            var keyword = editText    // setCurrentIndex may reset editText; keep the search term
+            currentIndex = ci - 1
+            if (searching)
+                editText = keyword
+        }
+    }
+
+    // Keep the originally selected item selected after a move, adjusting only its
+    // index — the same shift as removing at `from` then inserting at `to`.
+    function _applyMove(from, to) {
+        if (from < 0 || to < 0 || from === to)   // unchanged position: emit nothing
+            return
+        var ci = currentIndex
+        var newIndex = ci
+        if (ci === from) {
+            newIndex = to
+        } else {
+            if (from < ci) newIndex -= 1
+            if (to <= newIndex) newIndex += 1
+        }
+        moveRequested(from, to)
+        if (newIndex !== currentIndex)
+            currentIndex = newIndex
+    }
+
+    // Collapse list items that do not match the current query. Not clipped, so the
+    // dragged row and the rows making room for it can slide across their slots.
     delegate: ItemDelegate {
         id: item
         width: ListView.view.width
-        height: matched ? 32 : 0
+        height: matched ? control._itemHeight : 0
         visible: matched
-        clip: true
-        padding: 8
+        padding: 0
         hoverEnabled: control.hoverEnabled
+        z: dragging ? 2 : 1
 
         required property int index
         required property var modelData
 
         readonly property bool matched: control.query.length === 0
                                         || String(modelData).toLowerCase().indexOf(control.query) >= 0
+        readonly property bool current: control.currentIndex === index
+        readonly property bool dragging: control._dragSourceIndex === index
 
         highlighted: control.highlightedIndex === index
 
-        background: Rectangle {
-            radius: control.theme.radiusSm
-            color: item.highlighted ? control.theme.accent : "transparent"
+        // Drag distance of the dragged row. The centroid is measured against the
+        // delegate root, which never moves, so it stays stable while rowVisual slides.
+        readonly property real dragDy: dragging && dragHandler.active
+            ? dragHandler.centroid.position.y - dragHandler.centroid.pressPosition.y : 0
+
+        // Vertical shift of the row: the dragged row follows the finger, the others
+        // step aside to open a gap at the drop position.
+        readonly property real rowOffset: {
+            if (control._dragSourceIndex < 0)
+                return 0
+            if (dragging)
+                return dragDy
+            var s = control._dragSourceIndex
+            var t = control._dragTargetIndex
+            if (t < 0)
+                return 0
+            if (s < t && index > s && index <= t)
+                return -control._itemHeight
+            if (s > t && index >= t && index < s)
+                return control._itemHeight
+            return 0
         }
-        contentItem: Item {
-            Text {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 20
-                text: item.modelData
-                font.pixelSize: control.theme.fontSize
-                color: item.highlighted ? control.theme.accentForeground : control.theme.foreground
-                elide: Text.ElideRight
-                verticalAlignment: Text.AlignVCenter
+
+        // Update the drop target from the dragged row's current center.
+        onDragDyChanged: {
+            if (dragging && dragHandler.active)
+                control._dragTargetIndex = Math.max(0, Math.min(control.count - 1,
+                    index + Math.round(dragDy / control._itemHeight)))
+        }
+
+        background: null
+
+        // A whole-row press starts a reorder once past the drag threshold; a press
+        // that does not move still falls through to the delegate click for selection.
+        DragHandler {
+            id: dragHandler
+            target: null
+            enabled: control.reorderable && !control.searching
+            xAxis.enabled: false
+            yAxis.enabled: true
+            onActiveChanged: {
+                if (active) {
+                    control._dragSourceIndex = item.index
+                    control._dragTargetIndex = item.index
+                } else if (control._dragSourceIndex === item.index) {
+                    var from = control._dragSourceIndex
+                    var to = control._dragTargetIndex
+                    // Settle atomically: freeze the offsets (no animation) and snap
+                    // them to 0, move the data, then force an immediate layout so the
+                    // new real positions and the zeroed offsets land in the same frame
+                    // — no flash back to the pre-drag layout before the move.
+                    control._settling = true
+                    control._dragSourceIndex = -1
+                    control._dragTargetIndex = -1
+                    control._applyMove(from, to)
+                    item.ListView.view.forceLayout()
+                    Qt.callLater(function() { control._settling = false })
+                }
             }
-            // Check icon marking the selected item.
-            Canvas {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                width: control.theme.iconSize
-                height: control.theme.iconSize
-                visible: control.currentIndex === item.index
-                property color strokeColor: control.theme.foreground
-                onStrokeColorChanged: requestPaint()
-                onVisibleChanged: if (visible) requestPaint()
-                onPaint: {
-                    let ctx = getContext("2d")
-                    let s = width / 24
-                    ctx.reset()
-                    ctx.strokeStyle = strokeColor
-                    ctx.lineWidth = 2
-                    ctx.lineCap = "round"
-                    ctx.lineJoin = "round"
-                    ctx.beginPath()
-                    ctx.moveTo(20 * s, 6 * s)
-                    ctx.lineTo(9 * s, 17 * s)
-                    ctx.lineTo(4 * s, 12 * s)
-                    ctx.stroke()
+        }
+
+        contentItem: Item {
+            // Row visual; slides vertically for drag-follow and the gap animation.
+            Item {
+                id: rowVisual
+                width: item.width
+                height: control._itemHeight
+                y: item.rowOffset
+                opacity: item.dragging ? 0.85 : 1.0
+
+                // The dragged row tracks the finger with no easing; every other case
+                // — making room, snapping back on release — animates.
+                Behavior on y {
+                    enabled: !control._settling && (!item.dragging || !dragHandler.active)
+                    NumberAnimation { duration: control.theme.animationDuration; easing.type: Easing.OutCubic }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: control.theme.radiusSm
+                    color: (item.dragging || item.highlighted) ? control.theme.accent : "transparent"
+                    border.color: control.theme.ring
+                    border.width: item.dragging ? 1 : 0
+                }
+
+                Text {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 8
+                    anchors.right: iconArea.left
+                    anchors.rightMargin: 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: item.modelData
+                    font.pixelSize: control.theme.fontSize
+                    color: item.highlighted ? control.theme.accentForeground : control.theme.foreground
+                    elide: Text.ElideRight
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Item {
+                    id: iconArea
+                    anchors.right: parent.right
+                    anchors.rightMargin: 6
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 24
+                    height: 24
+
+                    // Check icon marking the selected item.
+                    Canvas {
+                        anchors.centerIn: parent
+                        width: control.theme.iconSize
+                        height: control.theme.iconSize
+                        visible: item.current
+                        property color strokeColor: control.theme.foreground
+                        onStrokeColorChanged: requestPaint()
+                        onVisibleChanged: if (visible) requestPaint()
+                        onPaint: {
+                            let ctx = getContext("2d")
+                            let s = width / 24
+                            ctx.reset()
+                            ctx.strokeStyle = strokeColor
+                            ctx.lineWidth = 2
+                            ctx.lineCap = "round"
+                            ctx.lineJoin = "round"
+                            ctx.beginPath()
+                            ctx.moveTo(20 * s, 6 * s)
+                            ctx.lineTo(9 * s, 17 * s)
+                            ctx.lineTo(4 * s, 12 * s)
+                            ctx.stroke()
+                        }
+                    }
+
+                    // Delete button on non-selected items when removable. A contained
+                    // tap removes the item without selecting it, closing the popup, or
+                    // changing the search text.
+                    Item {
+                        anchors.fill: parent
+                        visible: control.removable && !item.current
+
+                        HoverHandler { id: removeHover }
+
+                        // Fade from transparent to avoid a flash during hover transitions.
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: control.theme.radiusSm
+                            color: removeHover.hovered ? control.theme.destructiveBg
+                                   : control.theme.withAlpha(control.theme.destructive, 0)
+                            Behavior on color { ColorAnimation { duration: control.theme.animationDuration } }
+                        }
+
+                        // Delete (×) icon.
+                        Canvas {
+                            anchors.centerIn: parent
+                            width: control.theme.iconSize
+                            height: control.theme.iconSize
+                            property color strokeColor: removeHover.hovered ? control.theme.destructive
+                                                                            : control.theme.mutedForeground
+                            onStrokeColorChanged: requestPaint()
+                            onPaint: {
+                                let ctx = getContext("2d")
+                                let s = width / 24
+                                ctx.reset()
+                                ctx.strokeStyle = strokeColor
+                                ctx.lineWidth = 2
+                                ctx.lineCap = "round"
+                                ctx.beginPath()
+                                ctx.moveTo(18 * s, 6 * s)
+                                ctx.lineTo(6 * s, 18 * s)
+                                ctx.moveTo(6 * s, 6 * s)
+                                ctx.lineTo(18 * s, 18 * s)
+                                ctx.stroke()
+                            }
+                        }
+
+                        // Press-to-release grab so a drag never starts on the button.
+                        TapHandler {
+                            gesturePolicy: TapHandler.ReleaseWithinBounds
+                            onTapped: control._applyRemove(item.index)
+                        }
+                    }
                 }
             }
         }
