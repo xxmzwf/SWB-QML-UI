@@ -226,10 +226,10 @@ ComboBox {
         z: dragging ? 2 : 1
 
         required property int index
-        required property var modelData
 
+        readonly property string modelText: control.textAt(index)
         readonly property bool matched: control.query.length === 0
-                                        || String(modelData).toLowerCase().indexOf(control.query) >= 0
+                                        || modelText.toLowerCase().indexOf(control.query) >= 0
         readonly property bool current: control.currentIndex === index
         readonly property bool dragging: control._dragSourceIndex === index
 
@@ -326,7 +326,7 @@ ComboBox {
                     anchors.right: iconArea.left
                     anchors.rightMargin: 4
                     anchors.verticalCenter: parent.verticalCenter
-                    text: item.modelData
+                    text: item.modelText
                     font.pixelSize: control.theme.fontSize
                     color: item.highlighted ? control.theme.accentForeground : control.theme.foreground
                     elide: Text.ElideRight
