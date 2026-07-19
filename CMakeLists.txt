@@ -3,7 +3,7 @@ project(SWB-QML-UI VERSION 0.0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # Qt installation prefix; override it with -DQT_PATH=...
-set(QT_PATH "/Users/wufeng/CodeLibraries/Qt-6.11.1-Static" CACHE PATH "Qt 安装前缀")
+set(QT_PATH "D:/CodeLibraries/Qt-6.11.1-Static" CACHE PATH "Qt 安装前缀")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 
 # Default to Release when no build type is specified.
