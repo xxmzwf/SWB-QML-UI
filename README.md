@@ -120,9 +120,11 @@ cmake --install build --prefix /your/prefix
 Installed layout:
 
 ```
-lib/libSwbControls.<so|dylib|dll>     # backing library (compiled QML inside)
+lib/libSwbControls.<so|dylib>         # backing library on macOS/Linux
+lib/SwbControls.lib                   # Windows import library
+bin/SwbControls.dll                   # Windows runtime library
 lib/cmake/SwbControls/                # CMake package files for find_package
-share/qml/SwbControls/                # on-disk QML module: qmldir + qmltypes + QML sources + plugin
+share/qml/SwbControls/                # runtime QML module: qmldir + qmltypes + QML sources + plugin
 ```
 
 Consume it:
@@ -130,10 +132,21 @@ Consume it:
 ```cmake
 list(APPEND CMAKE_PREFIX_PATH "/your/prefix")
 find_package(SwbControls REQUIRED)
+
 target_link_libraries(appMyApp PRIVATE Qt6::Quick Swb::SwbControls)
+# The shared QML plugin is loaded from the installed module directory.
+target_compile_definitions(appMyApp PRIVATE
+    SWB_QML_IMPORT_PATH="${SwbControls_QML_IMPORT_PATH}")
 ```
 
-No import path and no extra code: the compiled QML resources travel inside `libSwbControls` and register themselves when the library loads, so the engine resolves `import SwbControls` through its built-in `qrc:/qt/qml` path. When you ship the app, distribute `libSwbControls` alongside it. The on-disk `share/qml/SwbControls/` directory serves the tooling — qmllint/qmlls and your IDE read the plain `.qml` sources from there (see [IDE & qmlls support](#ide--qml-language-server-qmlls-support)).
+Add the import root before loading QML:
+
+```cpp
+QQmlApplicationEngine engine;
+engine.addImportPath(QStringLiteral(SWB_QML_IMPORT_PATH));
+```
+
+`SwbControls_QML_IMPORT_PATH` is the parent directory (`/your/prefix/share/qml`), not the `SwbControls` directory itself. You can also set the `QML_IMPORT_PATH` environment variable to that parent directory. The compiled QML resources remain inside the backing library, but the runtime still needs `share/qml/SwbControls/` to find its `qmldir` and plugin. When you ship the app, distribute the backing library (`bin/SwbControls.dll` on Windows or `lib/libSwbControls.*` on macOS/Linux) together with `share/qml/SwbControls/`.
 
 ### Option 3 — Installed static library (`find_package`)
 
@@ -154,6 +167,16 @@ target_link_libraries(appMyApp PRIVATE Qt6::Quick Swb::SwbControls)
 ```
 
 The consuming code is identical to Option 2. The difference is the deliverable: the QML plugin, its type registrations, and all compiled QML resources are linked straight into your executable (the CMake package attaches them to `Swb::SwbControls` automatically), so everything ends up inside a single self-contained binary — nothing to ship next to it.
+
+If one CMake project needs to support both build flavors, add the runtime import path only for the shared target:
+
+```cmake
+get_target_property(_swb_type Swb::SwbControls TYPE)
+if(_swb_type STREQUAL "SHARED_LIBRARY")
+    target_compile_definitions(appMyApp PRIVATE
+        SWB_QML_IMPORT_PATH="${SwbControls_QML_IMPORT_PATH}")
+endif()
+```
 
 ## IDE & QML language server (qmlls) support
 

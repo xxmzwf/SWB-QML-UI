@@ -120,9 +120,11 @@ cmake --install build --prefix /your/prefix
 安装产物布局：
 
 ```
-lib/libSwbControls.<so|dylib|dll>     # 主库（编译后的 QML 已在库内）
+lib/libSwbControls.<so|dylib>         # macOS/Linux 下的主库
+lib/SwbControls.lib                   # Windows 导入库
+bin/SwbControls.dll                   # Windows 运行时动态库
 lib/cmake/SwbControls/                # 供 find_package 使用的 CMake 包配置
-share/qml/SwbControls/                # 磁盘 QML 模块：qmldir + qmltypes + QML 源文件 + 插件
+share/qml/SwbControls/                # 运行时 QML 模块：qmldir + qmltypes + QML 源文件 + 插件
 ```
 
 在你的工程中使用：
@@ -130,10 +132,21 @@ share/qml/SwbControls/                # 磁盘 QML 模块：qmldir + qmltypes + 
 ```cmake
 list(APPEND CMAKE_PREFIX_PATH "/your/prefix")
 find_package(SwbControls REQUIRED)
+
 target_link_libraries(appMyApp PRIVATE Qt6::Quick Swb::SwbControls)
+# 动态库模式下，QML 插件从安装后的模块目录加载。
+target_compile_definitions(appMyApp PRIVATE
+    SWB_QML_IMPORT_PATH="${SwbControls_QML_IMPORT_PATH}")
 ```
 
-无需 import path，也无需任何额外代码：编译后的 QML 资源随 `libSwbControls` 一起加载并自动注册，引擎通过内置的 `qrc:/qt/qml` 路径即可解析 `import SwbControls`。发布应用时，把 `libSwbControls` 随应用一起分发即可。磁盘上的 `share/qml/SwbControls/` 目录是给工具链用的——qmllint/qmlls 和 IDE 从这里读取 `.qml` 源文件（见下方 **IDE 与 qmlls 支持**）。
+在加载 QML 之前加入 import root：
+
+```cpp
+QQmlApplicationEngine engine;
+engine.addImportPath(QStringLiteral(SWB_QML_IMPORT_PATH));
+```
+
+`SwbControls_QML_IMPORT_PATH` 是父目录（`/your/prefix/share/qml`），不是 `SwbControls` 目录本身。也可以将环境变量 `QML_IMPORT_PATH` 设置为这个父目录。编译后的 QML 资源仍位于主库中，但运行时仍需要 `share/qml/SwbControls/` 来找到 `qmldir` 和插件。发布应用时，需要同时分发主库（Windows 为 `bin/SwbControls.dll`，macOS/Linux 为 `lib/libSwbControls.*`）以及 `share/qml/SwbControls/` 目录。
 
 ### 方式三.静态库导入（`find_package`）
 
@@ -154,6 +167,16 @@ target_link_libraries(appMyApp PRIVATE Qt6::Quick Swb::SwbControls)
 ```
 
 消费端代码与方式二完全一致。区别在于交付形态：QML 插件、类型注册以及编译后的 QML 资源都直接链接进你的可执行文件（CMake 包配置已自动把它们挂到 `Swb::SwbControls` 上），最终得到一个自包含的单个二进制，发布时无需附带任何库文件。
+
+若同一个 CMake 项目需要同时支持动态库和静态库，只在动态库目标上添加运行时 import path：
+
+```cmake
+get_target_property(_swb_type Swb::SwbControls TYPE)
+if(_swb_type STREQUAL "SHARED_LIBRARY")
+    target_compile_definitions(appMyApp PRIVATE
+        SWB_QML_IMPORT_PATH="${SwbControls_QML_IMPORT_PATH}")
+endif()
+```
 
 ## IDE 与 QML 语言服务器（qmlls）支持
 
