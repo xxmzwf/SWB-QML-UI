@@ -45,10 +45,10 @@ Out of respect for the original work: part of the controls in this library are i
 ```bash
 git clone https://github.com/xxmzwf/SWB-QML-UI.git
 cd SWB-QML-UI
-cmake -S . -B build -G Ninja -DQT_PATH=/path/to/Qt/6.11.1/<platform>
-cmake --build build
+cmake -S . -B build -DQT_PATH=/path/to/Qt/6.11.1/<platform> -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 # Optional — only needed for find_package integration (Options 2/3 below):
-cmake --install build --prefix /path/to/installed
+cmake --install build --prefix /path/to/installed --config Release
 ```
 
 `QT_PATH` points at your Qt installation prefix (the directory containing `bin`, `lib`, `qml`). Defaults you get without extra flags:
