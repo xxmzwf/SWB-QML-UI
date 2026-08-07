@@ -13,7 +13,7 @@ Out of respect for the original work: part of the controls in this library are i
 
 - **51 restyled controls** — buttons, inputs, menus, popups, navigation, calendar, table helpers… see the [component reference](docs/CONTROLS.md)
 - **One-line theming** — every control follows the `SwbTheme` singleton; toggle `SwbTheme.darkMode` and the whole UI switches
-- **Zero image assets** — all icons are drawn at runtime with `Canvas`, so they stay crisp at any scale and recolor with the theme
+- **Crisp vector icons** — built-in icons use `Canvas`, while SVG icon sources use a platform-aware high-DPI rendering path
 - **Plain Qt** — pure QML on top of `QtQuick.Controls.Basic`, no private APIs
 
 ## Screenshots
@@ -67,6 +67,18 @@ Run the example (it needs `Qt6::Multimedia` for the home-page video):
 # Windows / Linux
 ./build/examples/SwbExample
 ```
+
+### SVG rendering and static Qt builds
+
+`SwbIconLabel` selects one SVG renderer per icon. On Windows, untinted absolute SVG URLs use `VectorImage.CurveRenderer`; tinted SVGs and SVGs on other platforms use `IconImage` rasterized at the screen's physical pixel density. Named icons, relative URLs, and non-SVG sources continue to use the standard Controls icon path.
+
+Static Qt builds must also link the `QtQuick.VectorImage.Helpers` QML plugin. The repository's CMake targets declare this dependency automatically, so use the root `CMakeLists.txt` and link the provided `SwbControls`/`SwbControlsplugin` targets instead of copying individual QML files. An incomplete static integration can make the application close immediately while loading QML, with an error similar to:
+
+```text
+module "QtQuick.VectorImage.Helpers" plugin "qquickvectorimagehelpersplugin" not found
+```
+
+Run the executable from a terminal to see this diagnostic if a bundled application appears to open and immediately quit.
 
 ## Using it in your project
 

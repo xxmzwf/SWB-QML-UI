@@ -13,7 +13,7 @@
 
 - **51 个重绘控件** —— 按钮、输入、菜单、弹层、导航、日历、表格辅助件……详见[控件参考](CONTROLS-Chinese.md)
 - **一行代码换肤** —— 所有控件跟随 `SwbTheme` 单例，切换 `SwbTheme.darkMode` 即可整体切换明暗主题
-- **零图片资源** —— 图标全部由 `Canvas` 运行时绘制，任意缩放不失真，且随主题变色
+- **清晰的矢量图标** —— 内置图标使用 `Canvas`，SVG 图标源则使用平台适配的高 DPI 渲染路径
 - **纯正 Qt** —— 基于 `QtQuick.Controls.Basic` 的纯 QML 实现，不依赖任何私有 API
 
 ## 截图展示
@@ -67,6 +67,18 @@ cmake --install build --prefix /path/to/installed --config Release
 # Windows / Linux
 ./build/examples/SwbExample
 ```
+
+### SVG 渲染与静态 Qt 构建
+
+`SwbIconLabel` 会为每个图标只选择一种 SVG 渲染器。在 Windows 上，未着色的绝对 SVG URL 使用 `VectorImage.CurveRenderer`；着色 SVG 以及其他平台上的 SVG 使用按屏幕物理像素密度栅格化的 `IconImage`。命名图标、相对 URL 和非 SVG 图像仍使用 Qt Controls 的标准图标路径。
+
+静态 Qt 构建还必须链接 `QtQuick.VectorImage.Helpers` QML 插件。本仓库的 CMake 目标已经自动声明该依赖，因此应使用根目录的 `CMakeLists.txt`，并链接项目提供的 `SwbControls`/`SwbControlsplugin` 目标，不要只复制单独的 QML 文件。不完整的静态集成可能导致应用在加载 QML 时立即退出，并出现类似错误：
+
+```text
+module "QtQuick.VectorImage.Helpers" plugin "qquickvectorimagehelpersplugin" not found
+```
+
+如果打包后的应用看起来一闪而退，请从终端运行可执行文件以查看这条诊断信息。
 
 ## 导入到自己的项目
 
