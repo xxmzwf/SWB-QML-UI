@@ -45,10 +45,10 @@
 ```bash
 git clone https://github.com/xxmzwf/SWB-QML-UI.git
 cd SWB-QML-UI
-cmake -S . -B build -G Ninja -DQT_PATH=/path/to/Qt/6.11.1/<platform>
-cmake --build build
+cmake -S . -B build -G Ninja -DQT_PATH=/path/to/Qt/6.11.1/<platform> -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 # 可选——仅在使用下方方式二/方式三的 find_package 集成时需要：
-cmake --install build --prefix /path/to/installed
+cmake --install build --prefix /path/to/installed --config Release
 ```
 
 `QT_PATH` 指向你的 Qt 安装前缀（包含 `bin`、`lib`、`qml` 的那个目录）。不加任何参数时的默认行为：
@@ -114,7 +114,7 @@ endif()
 按默认选项编译后安装：
 
 ```bash
-cmake --install build --prefix /your/prefix
+cmake --install build --prefix /your/prefix --config Release
 ```
 
 安装产物布局：
@@ -153,9 +153,9 @@ engine.addImportPath(QStringLiteral(SWB_QML_IMPORT_PATH));
 编译并安装静态版本：
 
 ```bash
-cmake -S . -B build-static -G Ninja -DBUILD_SHARED_LIBS=OFF -DQT_PATH=...
-cmake --build build-static
-cmake --install build-static --prefix /your/prefix
+cmake -S . -B build-static -G Ninja -DBUILD_SHARED_LIBS=OFF -DQT_PATH=... -DCMAKE_BUILD_TYPE=Release
+cmake --build build-static --config Release
+cmake --install build-static --prefix /your/prefix --config Release
 ```
 
 在你的工程中使用：
