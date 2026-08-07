@@ -30,7 +30,7 @@ TabButton {
     font.weight: control.theme.fontWeight
     opacity: enabled ? 1.0 : 0.5
 
-    contentItem: IconLabel {
+    contentItem: SwbIconLabel {
         alignment: control.alignment
         spacing: control.spacing
         mirrored: control.mirrored

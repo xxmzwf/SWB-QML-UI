@@ -23,6 +23,7 @@ set(swb_qml_files
         SwbFrame.qml
         SwbGroupBox.qml
         SwbHorizontalHeaderView.qml
+        SwbIconLabel.qml
         SwbLabel.qml
         SwbMenu.qml
         SwbMenuBar.qml
@@ -73,7 +74,7 @@ qt_add_qml_module(SwbControls
     QML_FILES ${swb_qml_files}
 )
 
-target_link_libraries(SwbControls PRIVATE Qt6::Quick)
+target_link_libraries(SwbControls PRIVATE Qt6::Quick Qt6::QuickEffects Qt6::QuickVectorImage)
 
 # ---- Installation rules for cmake --install and find_package(SwbControls) ----
 include(GNUInstallDirs)

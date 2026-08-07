@@ -44,7 +44,7 @@ MenuItem {
         LayoutMirroring.enabled: control.mirrored
         LayoutMirroring.childrenInherit: true
 
-        IconLabel {
+        SwbIconLabel {
             id: itemLabel
             anchors.left: parent.left
             anchors.right: shortcutLabel.visible ? shortcutLabel.left : parent.right

@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls.impl
 import QtQuick.Controls.Basic
+import QtQuick.Effects
+import QtQuick.VectorImage
 
 ToolButton {
     id: control
@@ -43,16 +45,155 @@ ToolButton {
     // Icon-only buttons collapse to a square while retaining a full click target.
     implicitWidth: Math.max(controlHeight, implicitContentWidth + leftPadding + rightPadding)
 
-    contentItem: IconLabel {
-        alignment: control.alignment
-        spacing: control.spacing
-        mirrored: control.mirrored
-        display: control.display
-        icon: control.icon
-        text: control.text
-        font: control.font
-        color: control.textColor
-        Behavior on color { ColorAnimation { duration: control.theme.animationDuration } }
+    // IconLabel's internal icon image is texture-backed. Keep its text and
+    // fallback behavior, but render SVG sources through VectorImage's curve
+    // renderer so small line icons remain sharp at high-DPI sizes.
+    contentItem: Item {
+        id: content
+
+        readonly property bool hasText: control.text.length > 0
+        readonly property string iconUrl: control.icon.source.toString()
+        readonly property bool hasIconSource: iconUrl.length > 0
+        readonly property bool isSvgSource: {
+            const normalizedUrl = iconUrl.toLowerCase()
+            return normalizedUrl.endsWith(".svg") || normalizedUrl.endsWith(".svgz")
+                || normalizedUrl.indexOf(".svg?") >= 0 || normalizedUrl.indexOf(".svg#") >= 0
+                || normalizedUrl.indexOf(".svgz?") >= 0 || normalizedUrl.indexOf(".svgz#") >= 0
+        }
+        readonly property bool hasIconName: control.icon.name.length > 0
+        readonly property bool hasIcon: hasIconSource || hasIconName
+        readonly property bool showIcon: hasIcon && control.display !== AbstractButton.TextOnly
+        readonly property bool showText: hasText && control.display !== AbstractButton.IconOnly
+        readonly property real iconWidth: showIcon ? Math.max(0, control.icon.width) : 0
+        readonly property real iconHeight: showIcon ? Math.max(0, control.icon.height) : 0
+        readonly property real textWidth: showText ? textLabel.implicitWidth : 0
+        readonly property real textHeight: showText ? textLabel.implicitHeight : 0
+        readonly property real groupWidth: {
+            if (control.display === AbstractButton.TextBesideIcon)
+                return iconWidth + textWidth + (showIcon && showText ? control.spacing : 0)
+            if (control.display === AbstractButton.TextUnderIcon)
+                return Math.max(iconWidth, textWidth)
+            return showIcon ? iconWidth : textWidth
+        }
+        readonly property real groupHeight: {
+            if (control.display === AbstractButton.TextUnderIcon)
+                return iconHeight + textHeight + (showIcon && showText ? control.spacing : 0)
+            return Math.max(iconHeight, textHeight)
+        }
+        readonly property bool hasExplicitIconColor: control.icon.color.a > 0
+
+        implicitWidth: groupWidth
+        implicitHeight: groupHeight
+        // A ToolButton may be narrower than its natural icon + text width
+        // (for example when a side navigation pane is resized). Keep the
+        // content inside the control instead of letting it paint over the
+        // neighboring pane.
+        clip: true
+
+        Item {
+            id: group
+
+            width: content.groupWidth
+            height: content.groupHeight
+            x: {
+                if (control.alignment & Qt.AlignLeft)
+                    return 0
+                if (control.alignment & Qt.AlignRight)
+                    return content.width - width
+                return (content.width - width) / 2
+            }
+            y: {
+                if (control.alignment & Qt.AlignTop)
+                    return 0
+                if (control.alignment & Qt.AlignBottom)
+                    return content.height - height
+                return (content.height - height) / 2
+            }
+
+            Item {
+                id: iconItem
+
+                width: content.iconWidth
+                height: content.iconHeight
+                x: {
+                    if (control.display === AbstractButton.TextBesideIcon)
+                        return control.mirrored ? group.width - width : 0
+                    if (control.display === AbstractButton.TextUnderIcon)
+                        return (group.width - width) / 2
+                    return 0
+                }
+                y: control.display === AbstractButton.TextUnderIcon
+                   ? 0
+                   : (group.height - height) / 2
+                visible: content.showIcon
+
+                VectorImage {
+                    id: vectorIcon
+
+                    anchors.fill: parent
+                    source: control.icon.source
+                    fillMode: VectorImage.PreserveAspectFit
+                    preferredRendererType: VectorImage.CurveRenderer
+                    // Keep the source visible for ShaderEffectSource to capture
+                    // it when an explicit icon color is requested; hideSource
+                    // takes care of suppressing the direct copy in that case.
+                    visible: content.isSvgSource
+                }
+
+                // Preserve the existing icon.color API without affecting the
+                // direct VectorImage path used by the common (untinted) case.
+                ShaderEffectSource {
+                    id: coloredIconSource
+
+                    anchors.fill: parent
+                    sourceItem: vectorIcon
+                    hideSource: content.hasExplicitIconColor
+                    live: true
+                    visible: content.isSvgSource && content.hasExplicitIconColor
+                }
+
+                MultiEffect {
+                    anchors.fill: parent
+                    source: coloredIconSource
+                    colorization: content.hasExplicitIconColor ? 1.0 : 0.0
+                    colorizationColor: control.icon.color
+                    visible: content.isSvgSource && content.hasExplicitIconColor
+                }
+
+                // Non-SVG sources and named icons retain the original
+                // IconLabel implementation as a compatibility fallback.
+                IconLabel {
+                    anchors.fill: parent
+                    display: IconLabel.IconOnly
+                    icon: control.icon
+                    color: control.textColor
+                    visible: !content.isSvgSource
+                }
+            }
+
+            IconLabel {
+                id: textLabel
+
+                width: content.textWidth
+                height: content.textHeight
+                x: {
+                    if (control.display === AbstractButton.TextBesideIcon)
+                        return control.mirrored ? 0 : content.iconWidth + (content.showIcon ? control.spacing : 0)
+                    if (control.display === AbstractButton.TextUnderIcon)
+                        return (group.width - width) / 2
+                    return 0
+                }
+                y: control.display === AbstractButton.TextUnderIcon
+                   ? content.iconHeight + (content.showIcon ? control.spacing : 0)
+                   : (group.height - height) / 2
+                display: IconLabel.TextOnly
+                text: control.text
+                font: control.font
+                color: control.textColor
+                visible: content.showText
+                Behavior on color { ColorAnimation { duration: control.theme.animationDuration } }
+            }
+        }
     }
 
     background: Rectangle {

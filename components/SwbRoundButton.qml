@@ -55,7 +55,7 @@ RoundButton {
     // Collapse to a square for short content so the button renders as a circle.
     implicitWidth: Math.max(controlHeight, implicitContentWidth + leftPadding + rightPadding)
 
-    contentItem: IconLabel {
+    contentItem: SwbIconLabel {
         alignment: control.alignment
         spacing: control.spacing
         mirrored: control.mirrored

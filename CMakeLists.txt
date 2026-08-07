@@ -16,7 +16,7 @@ option(BUILD_SHARED_LIBS "构建动态库（关则静态库）" ON)
 # Build the example by default only when this is the top-level project.
 option(SWB_BUILD_EXAMPLES "编译示例程序" ${PROJECT_IS_TOP_LEVEL})
 
-find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Quick QuickEffects QuickVectorImage)
 qt_standard_project_setup(REQUIRES 6.10)
 
 add_subdirectory(components)
