@@ -2,10 +2,10 @@ import QtQuick
 import QtQuick.Controls.impl
 import QtQuick.Controls.Basic
 import QtQuick.VectorImage
-import QtQuick.Window
+import QtQuick.VectorImage.Helpers
 
 // IconLabel-compatible content item that keeps text native while rendering
-// SVG icons as curves instead of through the Controls texture icon path.
+// SVG icons as curves on Windows and at native pixel density elsewhere.
 Item {
     id: root
 
@@ -52,6 +52,12 @@ Item {
         return Math.max(iconHeight, textHeight)
     }
     readonly property bool hasExplicitIconColor: !!(icon && icon.color && icon.color.a > 0)
+    readonly property bool useCurveRenderer: Qt.platform.os === "windows"
+                                             && canRenderSvgDirectly
+                                             && !hasExplicitIconColor
+    readonly property real devicePixelRatio: Qt.application.screens.length > 0
+                                             ? Qt.application.screens[0].devicePixelRatio
+                                             : 1
 
     implicitWidth: groupWidth
     implicitHeight: groupHeight
@@ -93,34 +99,49 @@ Item {
                : (group.height - height) / 2
             visible: root.showIcon
 
-            VectorImage {
-                id: vectorIcon
+            Loader {
                 anchors.fill: parent
-                source: root.icon ? root.icon.source : ""
-                fillMode: VectorImage.PreserveAspectFit
-                preferredRendererType: VectorImage.CurveRenderer
-                visible: root.canRenderSvgDirectly && !root.hasExplicitIconColor
+                active: root.showIcon
+                sourceComponent: root.useCurveRenderer
+                                 ? vectorIconComponent
+                                 : root.canRenderSvgDirectly
+                                   ? rasterIconComponent
+                                   : fallbackIconComponent
             }
 
-            IconImage {
-                anchors.fill: parent
-                source: root.icon ? root.icon.source : ""
-                color: root.icon ? root.icon.color : root.color
-                sourceSize.width: Math.ceil(width * Screen.devicePixelRatio)
-                sourceSize.height: Math.ceil(height * Screen.devicePixelRatio)
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: false
-                visible: root.canRenderSvgDirectly && root.hasExplicitIconColor
+            Component {
+                id: vectorIconComponent
+
+                VectorImage {
+                    source: root.icon ? root.icon.source : ""
+                    fillMode: VectorImage.PreserveAspectFit
+                    preferredRendererType: VectorImage.CurveRenderer
+                }
             }
 
-            // Preserve named icons and non-SVG sources exactly as before.
-            IconLabel {
-                anchors.fill: parent
-                display: IconLabel.IconOnly
-                icon: root.icon
-                color: root.color
-                visible: root.showIcon && !root.canRenderSvgDirectly
+            Component {
+                id: rasterIconComponent
+
+                IconImage {
+                    source: root.icon ? root.icon.source : ""
+                    color: root.icon ? root.icon.color : root.color
+                    sourceSize.width: Math.ceil(width * root.devicePixelRatio)
+                    sourceSize.height: Math.ceil(height * root.devicePixelRatio)
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: false
+                }
+            }
+
+            Component {
+                id: fallbackIconComponent
+
+                // Preserve named icons and non-SVG sources exactly as before.
+                IconLabel {
+                    display: IconLabel.IconOnly
+                    icon: root.icon
+                    color: root.color
+                }
             }
         }
 

@@ -3,7 +3,7 @@ project(SWB-QML-UI VERSION 0.0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # Qt installation prefix; override it with -DQT_PATH=...
-set(QT_PATH "D:/CodeLibraries/Qt-6.11.1-Static" CACHE PATH "Qt 安装前缀")
+set(QT_PATH "/Users/wufeng/Code/CodeLibs/Qt-6.11.1-Static" CACHE PATH "Qt 安装前缀")
 list(APPEND CMAKE_PREFIX_PATH "${QT_PATH}")
 
 # Default to Release when no build type is specified.
@@ -16,7 +16,7 @@ option(BUILD_SHARED_LIBS "构建动态库（关则静态库）" ON)
 # Build the example by default only when this is the top-level project.
 option(SWB_BUILD_EXAMPLES "编译示例程序" ${PROJECT_IS_TOP_LEVEL})
 
-find_package(Qt6 REQUIRED COMPONENTS Quick QuickEffects QuickVectorImage)
+find_package(Qt6 REQUIRED COMPONENTS Quick QuickEffects QuickVectorImage QuickVectorImageHelpers)
 qt_standard_project_setup(REQUIRES 6.10)
 
 add_subdirectory(components)

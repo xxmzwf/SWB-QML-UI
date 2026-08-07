@@ -74,7 +74,12 @@ qt_add_qml_module(SwbControls
     QML_FILES ${swb_qml_files}
 )
 
-target_link_libraries(SwbControls PRIVATE Qt6::Quick Qt6::QuickEffects Qt6::QuickVectorImage)
+target_link_libraries(SwbControls PRIVATE
+    Qt6::Quick
+    Qt6::QuickEffects
+    Qt6::QuickVectorImage
+    Qt6::QuickVectorImageHelpers
+)
 
 # ---- Installation rules for cmake --install and find_package(SwbControls) ----
 include(GNUInstallDirs)
