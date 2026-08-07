@@ -153,9 +153,9 @@ engine.addImportPath(QStringLiteral(SWB_QML_IMPORT_PATH));
 Build and install a static variant:
 
 ```bash
-cmake -S . -B build-static -G Ninja -DBUILD_SHARED_LIBS=OFF -DQT_PATH=...
-cmake --build build-static
-cmake --install build-static --prefix /your/prefix
+cmake -S . -B build-static -G Ninja -DBUILD_SHARED_LIBS=OFF -DQT_PATH=... -DCMAKE_BUILD_TYPE=Release
+cmake --build build-static --config Release
+cmake --install build-static --prefix /your/prefix --config Release
 ```
 
 Consume it:
