@@ -108,7 +108,7 @@ ApplicationWindow {
                 SwbToolButton {
                     id: homeBtn
                     Layout.alignment: Qt.AlignHCenter
-                    icon.source: "assets/icons/home.svg"
+                    icon.source: "qrc:/qt/qml/SwbExample/assets/icons/home.svg"
                     icon.width: window.sidebarIconSize
                     icon.height: window.sidebarIconSize
                     icon.color: homeBtn.checked ? SwbTheme.accentForeground : SwbTheme.mutedForeground
@@ -120,7 +120,7 @@ ApplicationWindow {
                 SwbToolButton {
                     id: galleryBtn
                     Layout.alignment: Qt.AlignHCenter
-                    icon.source: "assets/icons/grid.svg"
+                    icon.source: "qrc:/qt/qml/SwbExample/assets/icons/grid.svg"
                     icon.width: window.sidebarIconSize
                     icon.height: window.sidebarIconSize
                     icon.color: galleryBtn.checked ? SwbTheme.accentForeground : SwbTheme.mutedForeground
@@ -132,7 +132,7 @@ ApplicationWindow {
                 SwbToolButton {
                     id: dashboardBtn
                     Layout.alignment: Qt.AlignHCenter
-                    icon.source: "assets/icons/dashboard.svg"
+                    icon.source: "qrc:/qt/qml/SwbExample/assets/icons/dashboard.svg"
                     icon.width: window.sidebarIconSize
                     icon.height: window.sidebarIconSize
                     icon.color: dashboardBtn.checked ? SwbTheme.accentForeground : SwbTheme.mutedForeground
@@ -146,7 +146,7 @@ ApplicationWindow {
                 SwbToolButton {
                     id: languageButton
                     Layout.alignment: Qt.AlignHCenter
-                    icon.source: "assets/icons/language.svg"
+                    icon.source: "qrc:/qt/qml/SwbExample/assets/icons/language.svg"
                     icon.width: window.sidebarIconSize
                     icon.height: window.sidebarIconSize
                     icon.color: languageButton.checked ? SwbTheme.accentForeground : SwbTheme.mutedForeground
@@ -157,7 +157,7 @@ ApplicationWindow {
                 // Settings drawer.
                 SwbToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    icon.source: "assets/icons/gear.svg"
+                    icon.source: "qrc:/qt/qml/SwbExample/assets/icons/gear.svg"
                     icon.width: window.sidebarIconSize
                     icon.height: window.sidebarIconSize
                     icon.color: SwbTheme.mutedForeground
@@ -167,7 +167,7 @@ ApplicationWindow {
                 // About dialog.
                 SwbToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    icon.source: "assets/icons/help.svg"
+                    icon.source: "qrc:/qt/qml/SwbExample/assets/icons/help.svg"
                     icon.width: window.sidebarIconSize
                     icon.height: window.sidebarIconSize
                     icon.color: SwbTheme.mutedForeground
@@ -177,7 +177,9 @@ ApplicationWindow {
                 // Theme toggle: sun in light mode and moon in dark mode.
                 SwbToolButton {
                     Layout.alignment: Qt.AlignHCenter
-                    icon.source: SwbTheme.darkMode ? "assets/icons/moon.svg" : "assets/icons/sun.svg"
+                    icon.source: SwbTheme.darkMode
+                                 ? "qrc:/qt/qml/SwbExample/assets/icons/moon.svg"
+                                 : "qrc:/qt/qml/SwbExample/assets/icons/sun.svg"
                     icon.width: window.sidebarIconSize
                     icon.height: window.sidebarIconSize
                     icon.color: SwbTheme.mutedForeground

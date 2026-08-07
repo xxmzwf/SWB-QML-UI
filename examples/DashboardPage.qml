@@ -285,7 +285,7 @@ Item {
 
                 SwbToolButton {
                     variant: "outline"
-                    icon.source: "assets/icons/chat-refresh.svg"
+                    icon.source: "qrc:/qt/qml/SwbExample/assets/icons/chat-refresh.svg"
                     icon.color: SwbTheme.foreground
                 }
             }
@@ -305,7 +305,7 @@ Item {
                     SwbToolButton {
                         Layout.alignment: Qt.AlignHCenter
                         variant: "outline"
-                        icon.source: "assets/icons/chat-bubble.svg"
+                        icon.source: "qrc:/qt/qml/SwbExample/assets/icons/chat-bubble.svg"
                         icon.color: SwbTheme.foreground
                     }
 
@@ -350,7 +350,7 @@ Item {
                         SwbToolButton {
                             variant: "outline"
                             size: "sm"
-                            icon.source: "assets/icons/chat-plus.svg"
+                            icon.source: "qrc:/qt/qml/SwbExample/assets/icons/chat-plus.svg"
                             icon.color: SwbTheme.foreground
                         }
 
@@ -359,7 +359,7 @@ Item {
                         SwbToolButton {
                             size: "sm"
                             checked: true
-                            icon.source: "assets/icons/chat-send.svg"
+                            icon.source: "qrc:/qt/qml/SwbExample/assets/icons/chat-send.svg"
                             icon.color: SwbTheme.accentForeground
                         }
                     }
@@ -727,20 +727,20 @@ Item {
                         stretchHeight: true
                         title: qsTr("Planning")
 
-                        NavigationItem { text: qsTr("Documents"); icon.source: "assets/icons/nav-documents.svg" }
-                        NavigationItem { text: qsTr("Budget"); icon.source: "assets/icons/nav-budget.svg" }
-                        NavigationItem { text: qsTr("Reports"); icon.source: "assets/icons/nav-reports.svg" }
-                        NavigationItem { text: qsTr("Goals"); icon.source: "assets/icons/nav-goals.svg" }
+                        NavigationItem { text: qsTr("Documents"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-documents.svg" }
+                        NavigationItem { text: qsTr("Budget"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-budget.svg" }
+                        NavigationItem { text: qsTr("Reports"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-reports.svg" }
+                        NavigationItem { text: qsTr("Goals"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-goals.svg" }
                     }
 
                     DashboardCard {
                         stretchHeight: true
                         title: qsTr("Overview")
 
-                        NavigationItem { text: qsTr("Analytics"); icon.source: "assets/icons/nav-analytics.svg"; selected: true }
-                        NavigationItem { text: qsTr("Transactions"); icon.source: "assets/icons/nav-transactions.svg" }
-                        NavigationItem { text: qsTr("Investments"); icon.source: "assets/icons/nav-investments.svg" }
-                        NavigationItem { text: qsTr("Spending"); icon.source: "assets/icons/nav-spending.svg" }
+                        NavigationItem { text: qsTr("Analytics"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-analytics.svg"; selected: true }
+                        NavigationItem { text: qsTr("Transactions"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-transactions.svg" }
+                        NavigationItem { text: qsTr("Investments"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-investments.svg" }
+                        NavigationItem { text: qsTr("Spending"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-spending.svg" }
                     }
                 }
 
@@ -757,20 +757,20 @@ Item {
                         stretchHeight: true
                         title: qsTr("Support")
 
-                        NavigationItem { text: qsTr("Help Center"); icon.source: "assets/icons/nav-help-center.svg" }
-                        NavigationItem { text: qsTr("Docs"); icon.source: "assets/icons/nav-documentation.svg" }
-                        NavigationItem { text: qsTr("Contact Us"); icon.source: "assets/icons/nav-contact.svg" }
-                        NavigationItem { text: qsTr("Status"); icon.source: "assets/icons/nav-status.svg" }
+                        NavigationItem { text: qsTr("Help Center"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-help-center.svg" }
+                        NavigationItem { text: qsTr("Docs"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-documentation.svg" }
+                        NavigationItem { text: qsTr("Contact Us"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-contact.svg" }
+                        NavigationItem { text: qsTr("Status"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-status.svg" }
                     }
 
                     DashboardCard {
                         stretchHeight: true
                         title: qsTr("Account")
 
-                        NavigationItem { text: qsTr("Profile"); icon.source: "assets/icons/nav-profile.svg" }
-                        NavigationItem { text: qsTr("Billing"); icon.source: "assets/icons/nav-billing.svg"; selected: true }
-                        NavigationItem { text: qsTr("Notifications"); icon.source: "assets/icons/nav-notifications.svg" }
-                        NavigationItem { text: qsTr("Security"); icon.source: "assets/icons/nav-security.svg" }
+                        NavigationItem { text: qsTr("Profile"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-profile.svg" }
+                        NavigationItem { text: qsTr("Billing"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-billing.svg"; selected: true }
+                        NavigationItem { text: qsTr("Notifications"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-notifications.svg" }
+                        NavigationItem { text: qsTr("Security"); icon.source: "qrc:/qt/qml/SwbExample/assets/icons/nav-security.svg" }
                     }
                 }
 

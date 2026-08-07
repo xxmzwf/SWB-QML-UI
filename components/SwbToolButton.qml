@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls.impl
 import QtQuick.Controls.Basic
-import QtQuick.Effects
 import QtQuick.VectorImage
+import QtQuick.Window
 
 ToolButton {
     id: control
@@ -60,6 +60,14 @@ ToolButton {
                 || normalizedUrl.indexOf(".svg?") >= 0 || normalizedUrl.indexOf(".svg#") >= 0
                 || normalizedUrl.indexOf(".svgz?") >= 0 || normalizedUrl.indexOf(".svgz#") >= 0
         }
+        // A relative QQuickIcon URL keeps the caller's QML context internally,
+        // but rebinding it to VectorImage/IconImage resolves it against this
+        // component instead. Only direct-render URLs that are already absolute.
+        readonly property bool hasAbsoluteIconSource: iconUrl.startsWith("/")
+                                                       || iconUrl.startsWith("\\")
+                                                       || iconUrl.startsWith(":/")
+                                                       || /^[a-z][a-z0-9+.-]*:/i.test(iconUrl)
+        readonly property bool canRenderSvgDirectly: isSvgSource && hasAbsoluteIconSource
         readonly property bool hasIconName: control.icon.name.length > 0
         readonly property bool hasIcon: hasIconSource || hasIconName
         readonly property bool showIcon: hasIcon && control.display !== AbstractButton.TextOnly
@@ -134,30 +142,22 @@ ToolButton {
                     source: control.icon.source
                     fillMode: VectorImage.PreserveAspectFit
                     preferredRendererType: VectorImage.CurveRenderer
-                    // Keep the source visible for ShaderEffectSource to capture
-                    // it when an explicit icon color is requested; hideSource
-                    // takes care of suppressing the direct copy in that case.
-                    visible: content.isSvgSource
+                    visible: content.canRenderSvgDirectly && !content.hasExplicitIconColor
                 }
 
-                // Preserve the existing icon.color API without affecting the
-                // direct VectorImage path used by the common (untinted) case.
-                ShaderEffectSource {
-                    id: coloredIconSource
-
+                // CurveRenderer cannot be used as an effect source on Qt 6.11.
+                // IconImage preserves icon.color and explicitly rasterizes the
+                // SVG at the current physical-pixel size for high-DPI clarity.
+                IconImage {
                     anchors.fill: parent
-                    sourceItem: vectorIcon
-                    hideSource: content.hasExplicitIconColor
-                    live: true
-                    visible: content.isSvgSource && content.hasExplicitIconColor
-                }
-
-                MultiEffect {
-                    anchors.fill: parent
-                    source: coloredIconSource
-                    colorization: content.hasExplicitIconColor ? 1.0 : 0.0
-                    colorizationColor: control.icon.color
-                    visible: content.isSvgSource && content.hasExplicitIconColor
+                    source: control.icon.source
+                    color: control.icon.color
+                    sourceSize.width: Math.ceil(width * Screen.devicePixelRatio)
+                    sourceSize.height: Math.ceil(height * Screen.devicePixelRatio)
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: false
+                    visible: content.canRenderSvgDirectly && content.hasExplicitIconColor
                 }
 
                 // Non-SVG sources and named icons retain the original
@@ -167,7 +167,7 @@ ToolButton {
                     display: IconLabel.IconOnly
                     icon: control.icon
                     color: control.textColor
-                    visible: !content.isSvgSource
+                    visible: !content.canRenderSvgDirectly
                 }
             }
 
