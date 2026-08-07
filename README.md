@@ -114,7 +114,7 @@ That's it — no import path setup. The QML files are compiled into the library,
 Build with the defaults, then install:
 
 ```bash
-cmake --install build --prefix /your/prefix
+cmake --install build --prefix /your/prefix --config Release
 ```
 
 Installed layout:
